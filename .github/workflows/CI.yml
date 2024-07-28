@@ -101,3 +101,20 @@ jobs:
 
     - name: Logout to Docker hub
       run: docker logout
+  deploy:
+    needs: [train, test, build, push-image]
+    runs-on: self-hosted
+
+    steps:
+      - name: Pull Docker Image
+        env: 
+          DOCKER_USER: ${{ secrets.DOCKER_USER_NAME }}
+        run: sudo docker pull $DOCKER_USER/titanic_fast_api:latest
+    
+      - name: Delete Old Docker Container
+        run: sudo docker rm -f titanic_fast_api-container || true
+    
+      - name: Run Docker Container
+        env: 
+          DOCKER_USER: ${{ secrets.DOCKER_USER_NAME }}
+        run: sudo docker run -it -d -p 8001:8001 --name titanic_fast_api-container $DOCKER_USER/titanic-fastapi:latest
